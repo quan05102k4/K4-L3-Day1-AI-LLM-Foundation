@@ -18,7 +18,7 @@ from typing import Any, Callable
 
 from dotenv import load_dotenv
 
-# Nạp OPENAI_API_KEY từ file .env (copy .env.example thành .env và dán key vào)
+# Nạp GROQ_API_KEY / GROQ_BASE_URL từ file .env (copy .env.example thành .env và dán key vào)
 load_dotenv()
 
 # ---------------------------------------------------------------------------
@@ -27,12 +27,18 @@ load_dotenv()
 PRICING_PER_1K_TOKENS = {
     "gpt-4o": {"input": 0.0025, "output": 0.010},
     "gpt-4o-mini": {"input": 0.00015, "output": 0.0006},
+    # Giá thật của Groq (nguồn: groq.com/pricing, quy đổi từ USD/1M token)
+    # cho 2 model đang dùng trong lab này qua .env (LAB_MODEL/LAB_MINI_MODEL).
+    "openai/gpt-oss-120b": {"input": 0.00015, "output": 0.0006},
+    "openai/gpt-oss-20b": {"input": 0.000075, "output": 0.0003},
 }
 
 # Tên model có thể đổi qua .env — ví dụ khi dùng NVIDIA NIM miễn phí
-# (xem LAB_GUIDE.md, Phụ lục B). Không đặt gì trong .env thì mặc định OpenAI.
-OPENAI_MODEL = os.getenv("LAB_MODEL", "gpt-4o")
-OPENAI_MINI_MODEL = os.getenv("LAB_MINI_MODEL", "gpt-4o-mini")
+# (xem LAB_GUIDE.md, Phụ lục B). Mặc định dưới đây khớp với model đang
+# dùng thật trong lab này (Groq, xem .env) — không đặt LAB_MODEL/LAB_MINI_MODEL
+# trong .env thì vẫn gọi 2 model này, miễn GROQ_API_KEY/GROQ_BASE_URL hợp lệ.
+OPENAI_MODEL = os.getenv("LAB_MODEL", "openai/gpt-oss-120b")
+OPENAI_MINI_MODEL = os.getenv("LAB_MINI_MODEL", "openai/gpt-oss-20b")
 
 
 # ===========================================================================
@@ -64,14 +70,14 @@ def call_openai(
 
     Gợi ý:
         from openai import OpenAI            # import BÊN TRONG hàm
-        client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+        client = OpenAI(api_key=os.getenv("GROQ_API_KEY"), base_url=os.getenv("GROQ_BASE_URL"))
         # đo thời gian bằng time.perf_counter() trước và sau lời gọi API
         # (perf_counter là đồng hồ đo khoảng thời gian, độ phân giải cao trên
         #  mọi hệ điều hành; time.time() trên Windows có thể trả về 0.0)
     """
     from openai import OpenAI
 
-    client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+    client = OpenAI(api_key=os.getenv("GROQ_API_KEY"), base_url=os.getenv("GROQ_BASE_URL"))
 
     start = time.perf_counter()
     response = client.chat.completions.create(
@@ -177,7 +183,7 @@ def chat_with_system_prompt(
     """
     from openai import OpenAI
 
-    client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+    client = OpenAI(api_key=os.getenv("GROQ_API_KEY"), base_url=os.getenv("GROQ_BASE_URL"))
 
     start = time.perf_counter()
     response = client.chat.completions.create(
@@ -291,7 +297,7 @@ def streaming_chatbot() -> None:
     """
     from openai import OpenAI
 
-    client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+    client = OpenAI(api_key=os.getenv("GROQ_API_KEY"), base_url=os.getenv("GROQ_BASE_URL"))
     history: list[dict] = []
 
     while True:
@@ -409,7 +415,7 @@ def run_assistant(
         get_input = input
     from openai import OpenAI
 
-    client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+    client = OpenAI(api_key=os.getenv("GROQ_API_KEY"), base_url=os.getenv("GROQ_BASE_URL"))
     history: list[dict] = []
     num_turns = 0
     total_tokens = 0
@@ -508,7 +514,7 @@ def format_comparison_table(results: list[dict]) -> str:
 
 
 # ---------------------------------------------------------------------------
-# Entry point — demo chạy thật (cần OPENAI_API_KEY)
+# Entry point — demo chạy thật (cần GROQ_API_KEY)
 # ---------------------------------------------------------------------------
 if __name__ == "__main__":
     print("=== So sánh model ===")
